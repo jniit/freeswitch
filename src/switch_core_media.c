@@ -7658,6 +7658,13 @@ SWITCH_DECLARE(void) switch_core_media_start_engine_function(switch_core_session
 
 	engine = &smh->engines[type];
 
+	switch_mutex_lock(smh->control_mutex);
+	if (!engine->engine_function_running) {
+		engine->engine_function = engine_function;
+		engine->engine_user_data = user_data;
+	}
+	switch_mutex_unlock(smh->control_mutex);
+
 	if (type == SWITCH_MEDIA_TYPE_VIDEO) {
 		switch_core_session_start_video_thread(session);
 	}
@@ -7666,13 +7673,7 @@ SWITCH_DECLARE(void) switch_core_media_start_engine_function(switch_core_session
 		switch_core_session_start_text_thread(session);
 	}
 
-	switch_mutex_lock(smh->control_mutex);
-	if (!engine->engine_function_running) {
-		engine->engine_function = engine_function;
-		engine->engine_user_data = user_data;
-		switch_core_session_video_reset(session);
-	}
-	switch_mutex_unlock(smh->control_mutex);
+	switch_core_session_video_reset(session);
 }
 
 SWITCH_DECLARE(int) switch_core_media_check_engine_function(switch_core_session_t *session, switch_media_type_t type)
